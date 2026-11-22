@@ -1,0 +1,1790 @@
+{
+  "datasets": [
+    {
+      "name": "retail_sales_kpi",
+      "displayName": "Retail Sales KPIs (Semantic Layer)",
+      "asset_name": "retail_q.semantic_layer.retail_metrics"
+    },
+    {
+      "name": "retail_products",
+      "displayName": "Product Catalog (dim_product)",
+      "config": {
+        "source": "retail_q.gold.dim_product",
+        "measures": [
+          {
+            "name": "product_count",
+            "expr": "COUNT(DISTINCT product_id)"
+          },
+          {
+            "name": "avg_unit_price",
+            "expr": "AVG(unit_price)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Product catalog metrics from the gold product dimension",
+        "dimensions": [
+          {
+            "name": "product_id",
+            "expr": "product_id"
+          },
+          {
+            "name": "product_name",
+            "expr": "product_name"
+          },
+          {
+            "name": "category",
+            "expr": "category"
+          },
+          {
+            "name": "subcategory",
+            "expr": "subcategory"
+          },
+          {
+            "name": "brand",
+            "expr": "brand"
+          },
+          {
+            "name": "product_segment",
+            "expr": "product_segment"
+          },
+          {
+            "name": "supplier_name",
+            "expr": "supplier_name"
+          },
+          {
+            "name": "unit_price",
+            "expr": "unit_price"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retail_inventory",
+      "displayName": "Inventory (fact_inventory)",
+      "config": {
+        "source": "retail_q.gold.fact_inventory",
+        "measures": [
+          {
+            "name": "total_stock",
+            "expr": "SUM(stock_quantity)"
+          },
+          {
+            "name": "inventory_records",
+            "expr": "COUNT(1)"
+          },
+          {
+            "name": "low_stock_items",
+            "expr": "COUNT_IF(stock_quantity <= reorder_level)"
+          },
+          {
+            "name": "avg_reorder_level",
+            "expr": "AVG(reorder_level)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Inventory metrics from the gold inventory fact table",
+        "dimensions": [
+          {
+            "name": "product_id",
+            "expr": "product_id"
+          },
+          {
+            "name": "inventory_status",
+            "expr": "inventory_status"
+          },
+          {
+            "name": "warehouse_location",
+            "expr": "warehouse_location"
+          },
+          {
+            "name": "stock_quantity",
+            "expr": "stock_quantity"
+          },
+          {
+            "name": "reorder_level",
+            "expr": "reorder_level"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retail_sales",
+      "displayName": "Sales Transactions (fact_sales)",
+      "config": {
+        "source": "retail_q.gold.fact_sales",
+        "measures": [
+          {
+            "name": "transactions",
+            "expr": "COUNT(1)"
+          },
+          {
+            "name": "units_sold",
+            "expr": "SUM(quantity)"
+          },
+          {
+            "name": "revenue",
+            "expr": "SUM(net_amount)"
+          },
+          {
+            "name": "total_discounts",
+            "expr": "SUM(discount_amount)"
+          },
+          {
+            "name": "gross_sales",
+            "expr": "SUM(selling_price * quantity)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Sales transaction metrics from the gold sales fact table",
+        "dimensions": [
+          {
+            "name": "product_id",
+            "expr": "product_id"
+          },
+          {
+            "name": "date_key",
+            "expr": "date_key"
+          },
+          {
+            "name": "sales_channel",
+            "expr": "sales_channel"
+          },
+          {
+            "name": "store_id",
+            "expr": "store_id"
+          }
+        ]
+      }
+    },
+    {
+      "name": "retail_calendar",
+      "displayName": "Calendar (dim_calendar)",
+      "config": {
+        "version": "1.1",
+        "source": "retail_q.gold.dim_calendar",
+        "comment": "Calendar dimension from the gold date dimension",
+        "dimensions": [
+          {
+            "name": "date_key",
+            "expr": "date_key"
+          },
+          {
+            "name": "full_date",
+            "expr": "full_date"
+          },
+          {
+            "name": "month",
+            "expr": "month"
+          },
+          {
+            "name": "month_name",
+            "expr": "month_name"
+          },
+          {
+            "name": "quarter",
+            "expr": "quarter"
+          },
+          {
+            "name": "year",
+            "expr": "year"
+          }
+        ]
+      }
+    },
+    {
+      "name": "top_products",
+      "displayName": "Top 10 Products by Revenue",
+      "config": {
+        "source": "SELECT p.product_name AS product_name, p.category AS category, p.brand AS brand,\n  SUM(s.net_amount) AS revenue, SUM(s.quantity) AS units_sold\nFROM retail_q.gold.fact_sales s JOIN retail_q.gold.dim_product p ON s.product_id = p.product_id GROUP BY p.product_name, p.category, p.brand ORDER BY revenue DESC LIMIT 10",
+        "measures": [
+          {
+            "name": "revenue",
+            "expr": "SUM(revenue)"
+          },
+          {
+            "name": "units_sold",
+            "expr": "SUM(units_sold)"
+          }
+        ],
+        "version": "1.1",
+        "comment": "Top 10 products by net revenue",
+        "dimensions": [
+          {
+            "name": "product_name",
+            "expr": "product_name"
+          },
+          {
+            "name": "category",
+            "expr": "category"
+          },
+          {
+            "name": "brand",
+            "expr": "brand"
+          }
+        ]
+      }
+    }
+  ],
+  "relationshipGraphs": [
+    {
+      "sources": [
+        {
+          "name": "Retail_Sales_KPIs_Semantic_Layer",
+          "datasetName": "retail_sales_kpi"
+        },
+        {
+          "name": "Product_Catalog_dim_product",
+          "datasetName": "retail_products"
+        },
+        {
+          "name": "Inventory_fact_inventory",
+          "datasetName": "retail_inventory"
+        },
+        {
+          "name": "Sales_Transactions_fact_sales",
+          "datasetName": "retail_sales"
+        },
+        {
+          "name": "Calendar_dim_calendar",
+          "datasetName": "retail_calendar"
+        },
+        {
+          "name": "Top_10_Products_by_Revenue",
+          "datasetName": "top_products"
+        }
+      ],
+      "relationships": [
+        {
+          "name": "relationship_0",
+          "from": "Sales_Transactions_fact_sales",
+          "to": "Product_Catalog_dim_product",
+          "on": "`Sales_Transactions_fact_sales`.`product_id` = `Product_Catalog_dim_product`.`product_id`",
+          "cardinality": "CARDINALITY_MANY_TO_ONE"
+        },
+        {
+          "name": "relationship_1",
+          "from": "Inventory_fact_inventory",
+          "to": "Product_Catalog_dim_product",
+          "on": "`Inventory_fact_inventory`.`product_id` = `Product_Catalog_dim_product`.`product_id`",
+          "cardinality": "CARDINALITY_MANY_TO_ONE"
+        },
+        {
+          "name": "relationship_2",
+          "from": "Sales_Transactions_fact_sales",
+          "to": "Calendar_dim_calendar",
+          "on": "`Sales_Transactions_fact_sales`.`date_key` = `Calendar_dim_calendar`.`date_key`",
+          "cardinality": "CARDINALITY_MANY_TO_ONE"
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "name": "8e021047",
+      "displayName": "Product based performance analysis",
+      "layout": [
+        {
+          "widget": {
+            "name": "kpi_revenue",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Total Revenue"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_units_sold",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Total Units Sold)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Total Units Sold`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Units Sold"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Total Units Sold)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 2,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_aov",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Average Order Value)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Average Order Value`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Order Value"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Average Order Value)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_products",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Product_Catalog_dim_product__product_count)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`product_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Products in Catalog"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Product_Catalog_dim_product__product_count)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 6,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_stock",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Inventory_fact_inventory__total_stock)",
+                      "expression": "MEASURE(`Inventory_fact_inventory`.`total_stock`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Units in Stock"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Inventory_fact_inventory__total_stock)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "kpi_low_stock",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Inventory_fact_inventory__low_stock_items)",
+                      "expression": "MEASURE(`Inventory_fact_inventory`.`low_stock_items`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Low Stock Items"
+              },
+              "version": 2,
+              "widgetType": "counter",
+              "encodings": {
+                "value": {
+                  "fieldName": "measure(Inventory_fact_inventory__low_stock_items)",
+                  "rowNumber": 0
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 10,
+            "y": 0,
+            "width": 2,
+            "height": 3
+          }
+        },
+        {
+          "widget": {
+            "name": "hdr_sales",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "## Sales Performance"
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 3,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "tbl_top_products",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Top_10_Products_by_Revenue__product_name",
+                      "expression": "`Top_10_Products_by_Revenue`.`product_name`"
+                    },
+                    {
+                      "name": "Top_10_Products_by_Revenue__category",
+                      "expression": "`Top_10_Products_by_Revenue`.`category`"
+                    },
+                    {
+                      "name": "Top_10_Products_by_Revenue__brand",
+                      "expression": "`Top_10_Products_by_Revenue`.`brand`"
+                    },
+                    {
+                      "name": "measure(Top_10_Products_by_Revenue__revenue)",
+                      "expression": "MEASURE(`Top_10_Products_by_Revenue`.`revenue`)"
+                    },
+                    {
+                      "name": "measure(Top_10_Products_by_Revenue__units_sold)",
+                      "expression": "MEASURE(`Top_10_Products_by_Revenue`.`units_sold`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Top 10 Products by Revenue"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Top_10_Products_by_Revenue__product_name"
+                  },
+                  {
+                    "fieldName": "Top_10_Products_by_Revenue__category"
+                  },
+                  {
+                    "fieldName": "Top_10_Products_by_Revenue__brand"
+                  },
+                  {
+                    "fieldName": "measure(Top_10_Products_by_Revenue__revenue)"
+                  },
+                  {
+                    "fieldName": "measure(Top_10_Products_by_Revenue__units_sold)"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 7,
+            "y": 5,
+            "width": 5,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_rev_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Retail_Sales_KPIs_Semantic_Layer__Category",
+                      "expression": "`Retail_Sales_KPIs_Semantic_Layer`.`Category`"
+                    },
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Category"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Category",
+                  "displayName": "Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                  "displayName": "Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Category",
+                  "displayName": "Category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 12,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "pie_rev_segment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Revenue`)"
+                    },
+                    {
+                      "name": "Retail_Sales_KPIs_Semantic_Layer__Product Segment",
+                      "expression": "`Retail_Sales_KPIs_Semantic_Layer`.`Product Segment`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Product Segment"
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "Revenue"
+                },
+                "color": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Product Segment",
+                  "displayName": "Product Segment",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 12,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_units_subcategory",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Retail_Sales_KPIs_Semantic_Layer__Subcategory",
+                      "expression": "`Retail_Sales_KPIs_Semantic_Layer`.`Subcategory`"
+                    },
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Total Units Sold)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Total Units Sold`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Units Sold by Subcategory"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Subcategory",
+                  "displayName": "Subcategory",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Total Units Sold)",
+                  "displayName": "Total Units Sold",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Subcategory",
+                  "displayName": "Subcategory",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 19,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_rev_channel",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Retail_Sales_KPIs_Semantic_Layer__Sales Channel",
+                      "expression": "`Retail_Sales_KPIs_Semantic_Layer`.`Sales Channel`"
+                    },
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Sales Channel"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Sales Channel",
+                  "displayName": "Sales Channel",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                  "displayName": "Revenue",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Sales Channel",
+                  "displayName": "Sales Channel",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 19,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_units_dow",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Retail_Sales_KPIs_Semantic_Layer__Day of Week",
+                      "expression": "`Retail_Sales_KPIs_Semantic_Layer`.`Day of Week`"
+                    },
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Total Units Sold)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Total Units Sold`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Units Sold by Day of Week"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Day of Week",
+                  "displayName": "Day of Week",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Total Units Sold)",
+                  "displayName": "Total Units Sold",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Day of Week",
+                  "displayName": "Day of Week",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 19,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "hdr_catalog",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "## Product Catalog"
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 26,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_prod_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__category",
+                      "expression": "`Product_Catalog_dim_product`.`category`"
+                    },
+                    {
+                      "name": "measure(Product_Catalog_dim_product__product_count)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`product_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Product Count by Category"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__category",
+                  "displayName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Product_Catalog_dim_product__product_count)",
+                  "displayName": "product_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Product_Catalog_dim_product__category",
+                  "displayName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 28,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_avgprice_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__category",
+                      "expression": "`Product_Catalog_dim_product`.`category`"
+                    },
+                    {
+                      "name": "measure(Product_Catalog_dim_product__avg_unit_price)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`avg_unit_price`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Avg Unit Price by Category"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__category",
+                  "displayName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Product_Catalog_dim_product__avg_unit_price)",
+                  "displayName": "avg_unit_price",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Product_Catalog_dim_product__category",
+                  "displayName": "category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 28,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "pie_prod_segment",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Product_Catalog_dim_product__product_count)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`product_count`)"
+                    },
+                    {
+                      "name": "Product_Catalog_dim_product__product_segment",
+                      "expression": "`Product_Catalog_dim_product`.`product_segment`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Products by Segment"
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Product_Catalog_dim_product__product_count)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "product_count"
+                },
+                "color": {
+                  "fieldName": "Product_Catalog_dim_product__product_segment",
+                  "displayName": "product_segment",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 28,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_prod_subcategory",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__subcategory",
+                      "expression": "`Product_Catalog_dim_product`.`subcategory`"
+                    },
+                    {
+                      "name": "measure(Product_Catalog_dim_product__product_count)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`product_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Product Count by Subcategory"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__subcategory",
+                  "displayName": "subcategory",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Product_Catalog_dim_product__product_count)",
+                  "displayName": "product_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Product_Catalog_dim_product__subcategory",
+                  "displayName": "subcategory",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 35,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_prod_supplier",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__supplier_name",
+                      "expression": "`Product_Catalog_dim_product`.`supplier_name`"
+                    },
+                    {
+                      "name": "measure(Product_Catalog_dim_product__product_count)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`product_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Products by Supplier"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__supplier_name",
+                  "displayName": "supplier_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Product_Catalog_dim_product__product_count)",
+                  "displayName": "product_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Product_Catalog_dim_product__supplier_name",
+                  "displayName": "supplier_name",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 35,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_prod_brand",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__brand",
+                      "expression": "`Product_Catalog_dim_product`.`brand`"
+                    },
+                    {
+                      "name": "measure(Product_Catalog_dim_product__product_count)",
+                      "expression": "MEASURE(`Product_Catalog_dim_product`.`product_count`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Product Count by Brand"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__brand",
+                  "displayName": "brand",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Product_Catalog_dim_product__product_count)",
+                  "displayName": "product_count",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Product_Catalog_dim_product__brand",
+                  "displayName": "brand",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 35,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "hdr_inventory",
+            "spec": {
+              "widgetType": "text",
+              "version": 1,
+              "encodings": {
+                "text": {
+                  "lines": [
+                    "## Inventory"
+                  ],
+                  "fields": []
+                }
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 42,
+            "width": 12,
+            "height": 2
+          }
+        },
+        {
+          "widget": {
+            "name": "pie_inv_status",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "measure(Inventory_fact_inventory__inventory_records)",
+                      "expression": "MEASURE(`Inventory_fact_inventory`.`inventory_records`)"
+                    },
+                    {
+                      "name": "Inventory_fact_inventory__inventory_status",
+                      "expression": "`Inventory_fact_inventory`.`inventory_status`"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Inventory Status Distribution"
+              },
+              "version": 3,
+              "widgetType": "pie",
+              "encodings": {
+                "angle": {
+                  "fieldName": "measure(Inventory_fact_inventory__inventory_records)",
+                  "scale": {
+                    "type": "quantitative"
+                  },
+                  "displayName": "inventory_records"
+                },
+                "color": {
+                  "fieldName": "Inventory_fact_inventory__inventory_status",
+                  "displayName": "inventory_status",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 44,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_stock_warehouse",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Inventory_fact_inventory__warehouse_location",
+                      "expression": "`Inventory_fact_inventory`.`warehouse_location`"
+                    },
+                    {
+                      "name": "measure(Inventory_fact_inventory__total_stock)",
+                      "expression": "MEASURE(`Inventory_fact_inventory`.`total_stock`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Stock by Warehouse Location"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Inventory_fact_inventory__warehouse_location",
+                  "displayName": "warehouse_location",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Inventory_fact_inventory__total_stock)",
+                  "displayName": "total_stock",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                },
+                "color": {
+                  "fieldName": "Inventory_fact_inventory__warehouse_location",
+                  "displayName": "warehouse_location",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 8,
+            "y": 51,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "line_revenue_trend",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "monthly(Calendar_dim_calendar__full_date)",
+                      "expression": "DATE_TRUNC(\"MONTH\", `Calendar_dim_calendar`.`full_date`)"
+                    },
+                    {
+                      "name": "measure(Sales_Transactions_fact_sales__revenue)",
+                      "expression": "MEASURE(`Sales_Transactions_fact_sales`.`revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Monthly Revenue Trend"
+              },
+              "version": 3,
+              "widgetType": "line",
+              "encodings": {
+                "x": {
+                  "fieldName": "monthly(Calendar_dim_calendar__full_date)",
+                  "scale": {
+                    "type": "temporal"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Sales_Transactions_fact_sales__revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 5,
+            "width": 7,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_rev_brand",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Retail_Sales_KPIs_Semantic_Layer__Brand",
+                      "expression": "`Retail_Sales_KPIs_Semantic_Layer`.`Brand`"
+                    },
+                    {
+                      "name": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                      "expression": "MEASURE(`Retail_Sales_KPIs_Semantic_Layer`.`Revenue`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Revenue by Brand (Top 10)"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Retail_Sales_KPIs_Semantic_Layer__Brand",
+                  "scale": {
+                    "categorySize": {
+                      "number": 10,
+                      "type": "number-of-categories"
+                    },
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Retail_Sales_KPIs_Semantic_Layer__Revenue)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 12,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_stock_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__category",
+                      "expression": "`Product_Catalog_dim_product`.`category`"
+                    },
+                    {
+                      "name": "measure(Inventory_fact_inventory__total_stock)",
+                      "expression": "MEASURE(`Inventory_fact_inventory`.`total_stock`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Stock by Category"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Inventory_fact_inventory__total_stock)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 44,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "bar_lowstock_category",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__category",
+                      "expression": "`Product_Catalog_dim_product`.`category`"
+                    },
+                    {
+                      "name": "measure(Inventory_fact_inventory__low_stock_items)",
+                      "expression": "MEASURE(`Inventory_fact_inventory`.`low_stock_items`)"
+                    }
+                  ],
+                  "disaggregated": false
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Low Stock Items by Category"
+              },
+              "version": 3,
+              "widgetType": "bar",
+              "encodings": {
+                "x": {
+                  "fieldName": "Product_Catalog_dim_product__category",
+                  "scale": {
+                    "type": "categorical"
+                  }
+                },
+                "y": {
+                  "fieldName": "measure(Inventory_fact_inventory__low_stock_items)",
+                  "scale": {
+                    "type": "quantitative"
+                  }
+                }
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 4,
+            "y": 44,
+            "width": 4,
+            "height": 7
+          }
+        },
+        {
+          "widget": {
+            "name": "tbl_low_stock",
+            "queries": [
+              {
+                "name": "main_query",
+                "query": {
+                  "fields": [
+                    {
+                      "name": "Product_Catalog_dim_product__product_name",
+                      "expression": "`Product_Catalog_dim_product`.`product_name`"
+                    },
+                    {
+                      "name": "Product_Catalog_dim_product__category",
+                      "expression": "`Product_Catalog_dim_product`.`category`"
+                    },
+                    {
+                      "name": "Product_Catalog_dim_product__brand",
+                      "expression": "`Product_Catalog_dim_product`.`brand`"
+                    },
+                    {
+                      "name": "Inventory_fact_inventory__stock_quantity",
+                      "expression": "`Inventory_fact_inventory`.`stock_quantity`"
+                    },
+                    {
+                      "name": "Inventory_fact_inventory__reorder_level",
+                      "expression": "`Inventory_fact_inventory`.`reorder_level`"
+                    },
+                    {
+                      "name": "Inventory_fact_inventory__inventory_status",
+                      "expression": "`Inventory_fact_inventory`.`inventory_status`"
+                    }
+                  ],
+                  "filters": [
+                    {
+                      "expression": "`Inventory_fact_inventory`.`stock_quantity` < `Inventory_fact_inventory`.`reorder_level`"
+                    }
+                  ],
+                  "disaggregated": true
+                }
+              }
+            ],
+            "spec": {
+              "frame": {
+                "showTitle": true,
+                "title": "Low Stock Products"
+              },
+              "version": 2,
+              "widgetType": "table",
+              "encodings": {
+                "columns": [
+                  {
+                    "fieldName": "Product_Catalog_dim_product__product_name"
+                  },
+                  {
+                    "fieldName": "Product_Catalog_dim_product__category"
+                  },
+                  {
+                    "fieldName": "Product_Catalog_dim_product__brand"
+                  },
+                  {
+                    "fieldName": "Inventory_fact_inventory__stock_quantity"
+                  },
+                  {
+                    "fieldName": "Inventory_fact_inventory__reorder_level"
+                  },
+                  {
+                    "fieldName": "Inventory_fact_inventory__inventory_status"
+                  }
+                ]
+              },
+              "data": {
+                "queryName": "main_query"
+              }
+            }
+          },
+          "position": {
+            "x": 0,
+            "y": 51,
+            "width": 8,
+            "height": 7
+          }
+        }
+      ],
+      "pageType": "PAGE_TYPE_CANVAS",
+      "layoutVersion": "GRID_V1"
+    }
+  ],
+  "uiSettings": {
+    "theme": {
+      "widgetHeaderAlignment": "ALIGNMENT_UNSPECIFIED"
+    },
+    "applyModeEnabled": false
+  }
+}
